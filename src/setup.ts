@@ -1,4 +1,5 @@
-import { existsSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 
 const INSTRUCTIONS = `
@@ -25,7 +26,8 @@ export async function setup() {
     const email = await promptEmail(rl)
     const spreadsheetId = await promptSpreadsheetId(rl)
 
-    writeEnvFile(credentialsPath, spreadsheetId)
+    const localPath = copyCredentials(credentialsPath)
+    writeEnvFile(localPath, spreadsheetId)
 
     console.log(`
   .env written successfully!
@@ -68,6 +70,16 @@ async function promptSpreadsheetId(rl: ReturnType<typeof createInterface>) {
     const trimmed = answer.trim()
     if (trimmed) return trimmed
   }
+}
+
+const LOCAL_CREDENTIALS = 'google-credentials.json'
+
+function copyCredentials(sourcePath: string): string {
+  const dest = resolve(LOCAL_CREDENTIALS)
+  if (resolve(sourcePath) === dest) return LOCAL_CREDENTIALS
+  copyFileSync(sourcePath, dest)
+  console.log(`  Credentials copied to ./${LOCAL_CREDENTIALS}`)
+  return LOCAL_CREDENTIALS
 }
 
 function writeEnvFile(credentialsPath: string, spreadsheetId: string) {

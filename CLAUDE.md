@@ -47,6 +47,8 @@ config/loader.ts ─┘  loads sheet-cms.config.{ts,js} → validates via config
 
 Loaded from `sheet-cms.config.ts` (or `.js`) in project root. Key fields: `spreadsheetId`, `credentialsPath`, `dataDir`, `files` (record of file name → `{type, arrayPath?}`), `blacklist`, `validation`.
 
+**Config precedence**: env vars (`GOOGLE_CREDENTIALS_PATH`, `SHEET_CMS_SPREADSHEET_ID`) override config file values. If no config file exists, env vars are required. The `setup` command writes both `.env` and copies credentials to `google-credentials.json`.
+
 ## Conventions
 
 - ES modules, strict TypeScript, Biome (not ESLint/Prettier)

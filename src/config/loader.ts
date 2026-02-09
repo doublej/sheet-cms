@@ -13,7 +13,7 @@ export async function loadConfig(configPath?: string): Promise<SheetCmsConfig> {
   const mod = await import(filePath)
   const raw = mod.default ?? mod
 
-  return sheetCmsConfigSchema.parse(raw)
+  return sheetCmsConfigSchema.parse(applyEnvOverrides(raw))
 }
 
 function loadFromEnv(): SheetCmsConfig {
@@ -25,6 +25,15 @@ function loadFromEnv(): SheetCmsConfig {
   }
 
   return sheetCmsConfigSchema.parse({ spreadsheetId, credentialsPath, files: {} })
+}
+
+function applyEnvOverrides(raw: Record<string, unknown>): Record<string, unknown> {
+  const overrides: Record<string, unknown> = {}
+  if (process.env.GOOGLE_CREDENTIALS_PATH)
+    overrides.credentialsPath = process.env.GOOGLE_CREDENTIALS_PATH
+  if (process.env.SHEET_CMS_SPREADSHEET_ID)
+    overrides.spreadsheetId = process.env.SHEET_CMS_SPREADSHEET_ID
+  return { ...raw, ...overrides }
 }
 
 function findConfigFile(): string | undefined {

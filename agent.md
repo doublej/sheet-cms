@@ -1,11 +1,12 @@
 # sheet-cms
 
-> A simple google sheet 2 way sync for cms purposes
+> Bidirectional sync between Google Sheets and local JSON files
 
 ## Stack
 
-- TypeScript, bun, Biome, Vitest
-- HTTP server with tsx for dev
+- TypeScript, Bun, Biome, Vitest
+- CLI: Commander, HTTP server: Elysia
+- Google Sheets API via `googleapis`
 
 ## Commands
 
@@ -14,31 +15,16 @@ Use `just` as the task runner:
 - `just check` — run all checks (loc-check + lint + typecheck + test)
 - `just loc-check` — check file lengths (warn >300, error >400 lines)
 - `just dev` — start dev server with watch mode
-- `just start` — run production build
 - `just test` — run tests
 - `just lint-fix` — auto-fix lint issues
-
-## Project Structure
-
-```
-src/
-├── env.ts          # environment config
-├── index.ts        # server entry point
-└── logger.ts       # logging utility
-package.json        # project config, dependencies
-tsconfig.json       # TypeScript config
-biome.json          # linter/formatter config
-Justfile            # task runner
-```
+- `just typecheck` — `bunx tsc --noEmit`
 
 ## Conventions
 
 - ES modules (`"type": "module"`)
 - Strict TypeScript config
 - Biome for linting and formatting (not ESLint/Prettier)
-- Keep functions small (5–10 lines target, 20 max)
-- Prefer explicit, readable code over cleverness
-- Handle errors at boundaries; let unexpected errors surface
+- Single quotes, no semicolons, 2-space indent, 100 char line width
 
 ## Agent
 
@@ -53,13 +39,6 @@ Run after every change:
 ### Auto-fixable
 
 - `bun run biome check --write src/` — auto-fix lint and format issues in one command
-
-### Common Tasks
-
-- Add an HTTP route handler: define a handler in `src/` and wire it to the server in `index.ts`
-- Add middleware: create a middleware function and apply it before route handlers
-- Add an env var: add the variable to `src/env.ts` with validation
-- Add a dependency: `bun add <package>`
 
 ### Testing
 
