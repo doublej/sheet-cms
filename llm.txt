@@ -1,0 +1,163 @@
+# sheet-cms
+
+Bidirectional sync between Google Sheets and local JSON files. Use a Google Sheet as a CMS and keep your JSON data files in sync.
+
+## Quick start
+
+Requires: bun (https://bun.sh)
+
+1. Add sheet-cms to your project:
+
+   bun add sheet-cms
+
+2. Run the setup wizard:
+
+   bunx sheet-cms setup
+
+   This walks you through:
+   - Creating a Google Cloud project and enabling the Sheets API
+   - Creating a service account and downloading the JSON key
+   - Entering your spreadsheet ID
+   - Writing a .env file with GOOGLE_CREDENTIALS_PATH and SHEET_CMS_SPREADSHEET_ID
+   - Sharing the sheet with the service account email
+
+3. Create a config file (sheet-cms.config.ts) in your project root:
+
+   import { defineConfig } from 'sheet-cms'
+
+   export default defineConfig({
+     spreadsheetId: process.env.SHEET_CMS_SPREADSHEET_ID!,
+     credentialsPath: process.env.GOOGLE_CREDENTIALS_PATH!,
+     dataDir: 'public/data',
+     files: {
+       'content.json': { type: 'keyvalue' },
+       'products.json': { type: 'array', arrayPath: 'items' },
+     },
+   })
+
+   The .env file is loaded automatically by bun.
+
+4. Pull content from your sheet:
+
+   bunx sheet-cms pull
+
+## Minimal setup (env vars only, no config file)
+
+If you only need basic sync without blacklist or validation, you can skip the config file. The .env written by `sheet-cms setup` is enough. The CLI will fall back to env vars when no config file is found. You will still need to pass file definitions through the library API or add a config file before pull/push works.
+
+## Config file
+
+Create sheet-cms.config.ts (or .js) in your project root:
+
+   import { defineConfig } from 'sheet-cms'
+
+   export default defineConfig({
+     spreadsheetId: 'your-spreadsheet-id',
+     credentialsPath: './google-credentials.json',
+     dataDir: 'public/data',
+     files: {
+       'content.json': { type: 'keyvalue' },
+       'items.json': { type: 'array', arrayPath: 'data' },
+     },
+     blacklist: {
+       'content.json': ['meta.**', 'internal.*'],
+     },
+     validation: [
+       {
+         match: 'content.json:url.*',
+         message: 'URLs must start with https://',
+         rule: { startsWith: 'https://' },
+       },
+     ],
+   })
+
+### Config fields
+
+- spreadsheetId: the ID from your Google Sheets URL (between /d/ and /edit)
+- credentialsPath: path to the service account JSON key file (default: ./google-credentials.json)
+- dataDir: directory for JSON data files (default: public/data)
+- files: record of filename to file config
+  - type: 'keyvalue' (flat key-path/value rows become nested JSON) or 'array' (header row + data rows become a JSON array)
+  - arrayPath: for array type, the nested path where the array is stored
+- blacklist: glob patterns per file that protect paths from being overwritten on pull or exported on push
+- validation: rules checked on push (startsWith, pattern, oneOf, or custom function)
+
+## File types
+
+### keyvalue
+
+Sheet layout: two columns, key path in column A, value in column B.
+
+   path.to.field    | Hello world
+   path.to.nested   | Some value
+
+Produces: { "path": { "to": { "field": "Hello world", "nested": "Some value" } } }
+
+### array
+
+Sheet layout: header row with column names, data rows below.
+
+   name   | price | active
+   Widget | 9.99  | true
+   Gadget | 19.99 | false
+
+Produces (at arrayPath): [{ "name": "Widget", "price": "9.99", "active": "true" }, ...]
+
+## CLI commands
+
+   bunx sheet-cms setup           # interactive setup wizard
+   bunx sheet-cms pull             # pull sheet data into local JSON
+   bunx sheet-cms pull --dry-run   # preview changes without writing
+   bunx sheet-cms pull -f content  # pull a single file
+   bunx sheet-cms push             # push local JSON to the sheet
+   bunx sheet-cms push -f content  # push a single file
+   bunx sheet-cms diff             # show differences between sheet and local
+   bunx sheet-cms blacklist        # show blacklisted paths
+   bunx sheet-cms serve            # start the HTTP API server
+
+All commands accept -c/--config <path> to specify a custom config file path.
+
+## HTTP API server
+
+Start with `bunx sheet-cms serve`. Runs on port 3000 by default (set PORT and HOST env vars).
+
+Endpoints:
+
+   POST /pull          pull from sheet (body: { dryRun?: boolean, file?: string })
+   POST /push          push to sheet (body: { file?: string })
+   POST /diff          diff sheet vs local (body: { file?: string })
+   GET  /files         list configured files
+   GET  /blacklist     show all blacklist patterns
+   GET  /blacklist/:f  show blacklist patterns for a file
+   GET  /health        health check
+
+Swagger docs available at /swagger when the server is running.
+
+## Library API
+
+   import { loadConfig, createSheetsClient, pull, push, diff, defineConfig } from 'sheet-cms'
+
+   const config = await loadConfig()
+   const sheets = createSheetsClient(config)
+
+   const pullResults = await pull(config, sheets, { dryRun: false })
+   const pushResult = await push(config, sheets, { file: 'content.json' })
+   const diffResults = await diff(config, sheets)
+
+## Environment variables
+
+   GOOGLE_CREDENTIALS_PATH      path to service account JSON key
+   SHEET_CMS_SPREADSHEET_ID     Google Spreadsheet ID
+   PORT                         HTTP server port (default: 3000)
+   HOST                         HTTP server host (default: 0.0.0.0)
+   NODE_ENV                     development | production | test
+
+## Google Cloud setup (manual)
+
+1. Go to https://console.cloud.google.com
+2. Create a project (or select existing)
+3. Enable the Google Sheets API (APIs & Services > Library)
+4. Create a service account (APIs & Services > Credentials > Create Credentials)
+5. Create a JSON key for the service account (Keys > Add Key > JSON)
+6. Save the JSON file in your project directory
+7. Share your Google Sheet with the service account email (Editor access)

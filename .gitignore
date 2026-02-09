@@ -1,0 +1,13 @@
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.local
+.env.*.local
+
+node_modules/
+dist/
+
+# Google service account credentials
+*credentials*.json
+*service-account*.json
