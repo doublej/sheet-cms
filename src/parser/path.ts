@@ -15,8 +15,9 @@ export function parsePath(path: string): (string | number)[] {
   return parts
 }
 
-export function parseValue(value: string | undefined): JsonValue {
+export function parseValue(value: string | undefined, forceString = false): JsonValue {
   if (value === undefined || value === '') return ''
+  if (forceString) return value
   if (value === 'true') return true
   if (value === 'false') return false
   if (value === 'null') return null

@@ -53,10 +53,16 @@ async function pullFile(
     updates = structuredClone(original)
     setNestedArray(updates, fileConfig.arrayPath, arrayData)
   } else {
-    updates = parseKeyValueSheet(rows)
+    updates = parseKeyValueSheet(rows, fileConfig.stringPaths)
   }
 
-  const { merged, changes } = mergeWithBlacklist(original, updates, fileName, blacklist)
+  const { merged, changes } = mergeWithBlacklist(
+    original,
+    updates,
+    fileName,
+    blacklist,
+    fileConfig.stringPaths,
+  )
   const visibleChanges = changes.filter((c) => c.oldValue !== c.newValue)
 
   if (visibleChanges.length > 0 && !dryRun) {

@@ -5,7 +5,7 @@ export function isBlacklisted(path: string, fileName: string, blacklist: Blackli
   return patterns.some((pattern) => matchPattern(path, pattern))
 }
 
-function matchPattern(path: string, pattern: string): boolean {
+export function matchPattern(path: string, pattern: string): boolean {
   const regexStr = pattern
     .replace(/\./g, '\\.')
     .replace(/\[\*\]/g, '\\[\\d+\\]')

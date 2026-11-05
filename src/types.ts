@@ -38,6 +38,7 @@ export type ValidationRuleCheck =
 export type FileConfig = {
   type: 'keyvalue' | 'array'
   arrayPath?: string
+  stringPaths?: string[]
 }
 
 export type BlacklistConfig = Record<string, string[]>

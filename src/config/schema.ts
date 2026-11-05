@@ -17,6 +17,7 @@ const validationRuleSchema = z.object({
 const fileConfigSchema = z.object({
   type: z.enum(['keyvalue', 'array']),
   arrayPath: z.string().optional(),
+  stringPaths: z.array(z.string()).optional(),
 })
 
 export const sheetCmsConfigSchema = z.object({

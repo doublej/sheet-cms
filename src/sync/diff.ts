@@ -49,10 +49,10 @@ async function diffFile(
     updates = structuredClone(original)
     setNestedArray(updates, fileConfig.arrayPath, arrayData)
   } else {
-    updates = parseKeyValueSheet(rows)
+    updates = parseKeyValueSheet(rows, fileConfig.stringPaths)
   }
 
-  const changes = diffObjects(original, updates, fileName, blacklist)
+  const changes = diffObjects(original, updates, fileName, blacklist, fileConfig.stringPaths)
 
   return { fileName, hasChanges: changes.length > 0, changes }
 }

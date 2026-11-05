@@ -1,14 +1,15 @@
-import { isBlacklisted } from '../blacklist/matcher.js'
+import { isBlacklisted, matchPattern } from '../blacklist/matcher.js'
 import type { BlacklistConfig, JsonObject, JsonValue, SheetData } from '../types.js'
 import { parseValue, setNestedValue } from './path.js'
 
-export function parseKeyValueSheet(rows: SheetData): JsonObject {
+export function parseKeyValueSheet(rows: SheetData, stringPaths: string[] = []): JsonObject {
   const result: JsonObject = {}
 
   for (const row of rows.slice(1)) {
     const [keyPath, value] = row
     if (!keyPath || keyPath.startsWith('#')) continue
-    setNestedValue(result, keyPath, parseValue(value))
+    const forceString = stringPaths.some((p) => matchPattern(keyPath, p))
+    setNestedValue(result, keyPath, parseValue(value, forceString))
   }
 
   return result
